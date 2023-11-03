@@ -167,7 +167,7 @@ const Login = () => {
               </Link>
             </Grid>
             <Grid item>
-              <Link component={RouterLink} to={"/register"} underline="hover" variant="body2" 
+              <Link component={RouterLink} to={"/instrumental/register"} underline="hover" variant="body2" 
                 sx={{ color: styles.colors.PRIMARY,
                   fontWeight: "bold",
                   opacity: .8

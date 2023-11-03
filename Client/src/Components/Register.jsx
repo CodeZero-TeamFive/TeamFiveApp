@@ -186,7 +186,7 @@ const Register = () => {
 					</Button>
 					<Grid container direction="column" alignItems="center" pt={1}>
 						<Grid item xs>
-							<Link component={RouterLink} to={"/sign-in"} underline="hover" variant="body2"
+							<Link component={RouterLink} to={"/instrumental/sign-in"} underline="hover" variant="body2"
 								sx={{
 									color: styles.colors.PRIMARY,
 									fontWeight: "bold",
