@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { DayPilot, DayPilotCalendar, DayPilotNavigator } from "@daypilot/daypilot-lite-react";
 import useLocalStorage from "../Hooks/useLocalStorage";
 import useApi from "../Hooks/useApi";
-import axios from "axios";
+import useApiWithReturn from "../Hooks/useApiWithReturn";
 
 const styles = {
   wrap: {
@@ -17,10 +17,13 @@ const styles = {
 };
 
 const Calendar = () => {
+  const [loading, setLoading] = useState(true);
   const [credentials, setCredentials] = useLocalStorage("credentials", {});
   const url = "/api/lesson/user";
 
+  // Still need to add client-side error handling
   const { data, error, handleSubmit } = useApi();
+  const { handleSubmit: handleSubmitWithReturn } = useApiWithReturn(); // single-use call to API which doesn't affect data state from useApi()
 
   const calendarRef = useRef();
 
@@ -62,12 +65,19 @@ const Calendar = () => {
 
     contextMenu: new DayPilot.Menu({
       items: [
-        // This allows users to cancel a lesson; still need to add a backend route to take care of DB data
         {
           text: "Cancel Lesson",
           onClick: async args => {
+            // Create warning before user cancels lesson?
+            let id = args.source.id();
             const dp = calendarRef.current.control;
-            dp.events.remove(args.source);
+            try {
+              handleSubmitWithReturn(`/api/lesson/${id}/delete`, {}, "POST");
+              dp.events.remove(args.source);
+            } catch (err) {
+              // Next step: display error for user to see
+              console.log(err);
+            }
           },
         },
         // {
@@ -125,7 +135,7 @@ const Calendar = () => {
       //     });
       //   }
       // }
-    }
+    },
   });
 
   useEffect(() => {
@@ -137,7 +147,9 @@ const Calendar = () => {
     console.log(data);
     let events;
 
-    if (data) {
+    if (data && data.length > 0) {
+      // Thinking of a way to implement a loading animation while still rendering calendarRef.current
+      setLoading(false);
       events = data.map(lessonsToEvents);
     }
 

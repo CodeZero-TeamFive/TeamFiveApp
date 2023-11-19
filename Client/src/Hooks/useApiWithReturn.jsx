@@ -1,14 +1,10 @@
-import { useState } from 'react';
 import axios from 'axios';
 import useLocalStorage from "./useLocalStorage";
 
 // useApi() for updatable data state (best with only one unique repeatable request to API)
-// useApiWithReturn() for single-use returns (if you have multiple unique calls to API)
+// useApiWithReturn() for single-use return statements (if you have multiple unique calls to API)
 
-const useApi = () => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+const useApiWithReturn = () => {
   const [credentials, setCredentials] = useLocalStorage("credentials", {});
 
   const getHeaders = (accessToken) => ({
@@ -41,37 +37,33 @@ const useApi = () => {
   };
 
   const fetchDataWrapper = async (givenUrl, bodyData, givenMethod) => {
-    setLoading(true);
-    setError(null);
-
     try {
       const result = await fetchData(givenUrl, bodyData, givenMethod, credentials["accessToken"] || "");
-      setData(result.data);
+      return result.data;
     } catch (err) {
-        if (err.response && err.response.status === 401) {
-            try {
-                const retryResult = await refreshTokenAndRetry({
-                    method: givenMethod,
-                    url: givenUrl,
-                    headers: getHeaders(credentials["accessToken"]),
-                    data: bodyData
-                });
-                setData(retryResult.data);
-            } catch (refreshErr) {
-                setError(refreshErr);
-            }
-        } else {
-            setError(err);
+      if (err.response && err.response.status === 401) {
+        try {
+          const retryResult = await refreshTokenAndRetry({
+            method: givenMethod,
+            url: givenUrl,
+            headers: getHeaders(credentials["accessToken"]),
+            data: bodyData
+          });
+          return retryResult.data;
+        } catch (refreshError) {
+          return refreshError;
         }
+      } else {
+        return err;
+      }
     }
-    setLoading(false);
   };
 
   const handleSubmit = (givenUrl, givenData, givenMethod) => {
-    fetchDataWrapper(givenUrl, givenData, givenMethod);
+    return fetchDataWrapper(givenUrl, givenData, givenMethod);
   };
 
-  return { data, loading, error, handleSubmit };
+  return { handleSubmit };
 };
 
-export default useApi;
+export default useApiWithReturn;
